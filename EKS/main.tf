@@ -94,7 +94,7 @@ module "eks" {
   # Compute (node groups)
   compute_config = {
     enabled    = true
-    node_pools = ["nodes"]
+    node_pools = ["general-purpose"]
   }
 
   # Node pool definitions
