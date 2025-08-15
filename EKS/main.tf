@@ -1,33 +1,33 @@
-module "vpc" {
-  source = "terraform-aws-modules/vpc/aws"
+# module "vpc" {
+#   source = "terraform-aws-modules/vpc/aws"
 
-  name = "jenkins-vpc"
-  cidr = var.vpc_cidr
+#   name = "jenkins-vpc"
+#   cidr = var.vpc_cidr
 
-  azs = data.aws_availability_zones.azs.names
+#   azs = data.aws_availability_zones.azs.names
 
-  private_subnets = var.private_subnets
-  public_subnets  = var.public_subnets
+#   private_subnets = var.private_subnets
+#   public_subnets  = var.public_subnets
 
-  enable_dns_hostnames = true
-  enable_nat_gateway   = true
-  single_nat_gateway   = true
+#   enable_dns_hostnames = true
+#   enable_nat_gateway   = true
+#   single_nat_gateway   = true
 
-  tags = {
-    "kubernetes.io/cluster/my-eks-cluster" = "shared"
-  }
+#   tags = {
+#     "kubernetes.io/cluster/my-eks-cluster" = "shared"
+#   }
 
-  public_subnet_tags = {
-    "kubernetes.io/cluster/my-eks-cluster" = "shared"
-    "kubernetes.io/role/elb"               = 1
-  }
+#   public_subnet_tags = {
+#     "kubernetes.io/cluster/my-eks-cluster" = "shared"
+#     "kubernetes.io/role/elb"               = 1
+#   }
 
-  private_subnet_tags = {
-    "kubernetes.io/cluster/my-eks-cluster" = "shared"
-    "kubernetes.io/role/internal-elb"      = 1
-  }
+#   private_subnet_tags = {
+#     "kubernetes.io/cluster/my-eks-cluster" = "shared"
+#     "kubernetes.io/role/internal-elb"      = 1
+#   }
 
-}
+# }
 
 # module "eks" {
 #   source  = "terraform-aws-modules/eks/aws"
@@ -104,28 +104,125 @@ module "vpc" {
 #   }
 # }
 
+# module "eks" {
+#   source  = "terraform-aws-modules/eks/aws"
+#   version = "~> 21.0"
+
+#   name               = "my-cluster"
+#   kubernetes_version = "1.33"
+
+#   endpoint_public_access = true
+#   enable_cluster_creator_admin_permissions = true
+
+#   vpc_id     = module.vpc.vpc_id
+#   subnet_ids = module.vpc.private_subnets # Changed from private_subnets to public_subnets
+
+#   eks_managed_node_groups = {
+#     example = {
+#       ami_type       = "AL2023_x86_64_STANDARD"
+#       instance_types = ["t2.small"] # more stable than t2.small for EKS
+
+#       min_size     = 1
+#       max_size     = 3
+#       desired_size = 2
+#       subnet_ids     = module.vpc.public_subnets
+#     }
+#   }
+
+#   tags = {
+#     Environment = "dev"
+#     Terraform   = "true"
+#   }
+# }
+
+# VPC Configuration (same as yours)
+
+# versions.tf
+# versions.tf
+# versions.tf - Exact versions for maximum stability
+terraform {
+  required_version = ">= 1.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "= 5.95.0"
+    }
+    
+    tls = {
+      source  = "hashicorp/tls"
+      version = "= 4.1.0"
+    }
+    
+    time = {
+      source  = "hashicorp/time"
+      version = "= 0.13.1"
+    }
+    
+    cloudinit = {
+      source  = "hashicorp/cloudinit"
+      version = "= 2.3.7"
+    }
+    
+    null = {
+      source  = "hashicorp/null"
+      version = "= 3.2.4"
+    }
+  }
+}
+
+# main.tf - With exact module versions
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "5.12.1"  # Exact version compatible with AWS 5.95.0
+
+  name = "jenkins-vpc"
+  cidr = var.vpc_cidr
+
+  azs = data.aws_availability_zones.azs.names
+
+  private_subnets = var.private_subnets
+  public_subnets  = var.public_subnets
+
+  enable_dns_hostnames = true
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+
+  tags = {
+    "kubernetes.io/cluster/my-eks-cluster" = "shared"
+  }
+
+  public_subnet_tags = {
+    "kubernetes.io/cluster/my-eks-cluster" = "shared"
+    "kubernetes.io/role/elb"               = 1
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/cluster/my-eks-cluster" = "shared"
+    "kubernetes.io/role/internal-elb"      = 1
+  }
+}
+
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 21.0"
+  version = "19.21.0"
 
-  name               = "my-cluster"
-  kubernetes_version = "1.33"
+  cluster_name    = "my-eks-cluster"
+  cluster_version = "1.29"
 
-  endpoint_public_access = true
-  enable_cluster_creator_admin_permissions = true
+  cluster_endpoint_public_access = true
 
   vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets # Changed from private_subnets to public_subnets
+  subnet_ids = module.vpc.private_subnets
 
   eks_managed_node_groups = {
-    example = {
-      ami_type       = "AL2023_x86_64_STANDARD"
-      instance_types = ["t2.small"] # more stable than t2.small for EKS
+    nodes = {
+      ami_type       = "AL2_x86_64"
+      instance_types = ["t3.small"]
 
       min_size     = 1
       max_size     = 3
       desired_size = 2
-      subnet_ids     = module.vpc.public_subnets
     }
   }
 
