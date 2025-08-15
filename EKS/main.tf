@@ -115,7 +115,7 @@ module "eks" {
   enable_cluster_creator_admin_permissions = true
 
   vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.public_subnets  # Changed from private_subnets to public_subnets
+  subnet_ids = module.vpc.private_subnets # Changed from private_subnets to public_subnets
 
   eks_managed_node_groups = {
     example = {
@@ -125,6 +125,7 @@ module "eks" {
       min_size     = 1
       max_size     = 3
       desired_size = 2
+      subnet_ids     = module.vpc.public_subnets
     }
   }
 
